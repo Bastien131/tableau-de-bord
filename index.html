@@ -1,0 +1,2059 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tableau de bord — Bastien</title>
+  <style>
+    :root {
+      --bg: #f6f1e8;
+      --paper: rgba(255, 252, 247, 0.92);
+      --paper-solid: #fffaf2;
+      --ink: #2e2923;
+      --muted: #74695d;
+      --line: rgba(70, 52, 34, 0.12);
+      --shadow: 0 20px 60px rgba(60, 42, 20, 0.10);
+      --radius-xl: 30px;
+      --radius-lg: 22px;
+      --radius-md: 16px;
+      --terracotta: #c76d42;
+      --terracotta-soft: #f5ddd0;
+      --olive: #78894d;
+      --olive-soft: #e6ead6;
+      --blue: #416f8d;
+      --blue-soft: #dbe8ef;
+      --plum: #75506f;
+      --plum-soft: #eadde7;
+      --gold: #c59a3b;
+      --gold-soft: #f4e8c9;
+      --white: #fff;
+      --success: #6c8c4a;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(199, 109, 66, 0.16), transparent 32%),
+        radial-gradient(circle at 85% 15%, rgba(65, 111, 141, 0.14), transparent 28%),
+        linear-gradient(135deg, #f8f3ea 0%, #efe7d8 100%);
+      line-height: 1.5;
+    }
+
+    h1, h2, h3, p { margin: 0; }
+
+    .shell {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 30px 0 56px;
+    }
+
+    .hero,
+    .panel,
+    .quest-card,
+    .dormant-card,
+    .objective-card {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(16px);
+    }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      border-radius: var(--radius-xl);
+      padding: 30px;
+      display: grid;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      width: 420px;
+      height: 420px;
+      right: -190px;
+      top: -180px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, rgba(199,109,66,.24), rgba(197,154,59,.10));
+      pointer-events: none;
+    }
+
+    .hero-top {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+
+    .eyebrow,
+    .section-kicker,
+    .quest-type {
+      position: relative;
+      z-index: 1;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      width: fit-content;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--muted);
+    }
+
+    .eyebrow::before,
+    .section-kicker::before,
+    .quest-type::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--terracotta);
+      flex: 0 0 auto;
+    }
+
+    h1 {
+      position: relative;
+      z-index: 1;
+      font-size: clamp(2.4rem, 5vw, 4.6rem);
+      line-height: .98;
+      letter-spacing: -0.06em;
+      margin-top: 6px;
+    }
+
+    .hero-copy {
+      position: relative;
+      z-index: 1;
+      max-width: 840px;
+      font-size: clamp(1rem, 1.8vw, 1.16rem);
+      color: var(--muted);
+    }
+
+    .hero-note {
+      position: relative;
+      z-index: 1;
+      width: fit-content;
+      max-width: 820px;
+      padding: 12px 15px;
+      border-radius: 0 16px 16px 0;
+      border-left: 4px solid var(--terracotta);
+      background: var(--terracotta-soft);
+      font-weight: 800;
+      line-height: 1.45;
+    }
+
+    .update-wrap {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      justify-items: end;
+      gap: 8px;
+      min-width: min(100%, 270px);
+    }
+
+    .update-btn {
+      border: 1px solid rgba(65, 111, 141, .24);
+      background: linear-gradient(135deg, rgba(65,111,141,.98), rgba(75,125,155,.92));
+      color: white;
+      font-weight: 900;
+      letter-spacing: .01em;
+      border-radius: 999px;
+      padding: 13px 18px;
+      cursor: pointer;
+      box-shadow: 0 12px 22px rgba(65, 111, 141, .22);
+      font-size: 14px;
+      transition: transform .18s ease, box-shadow .18s ease;
+    }
+
+    .update-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 16px 28px rgba(65, 111, 141, .25);
+    }
+
+    .update-hint {
+      max-width: 250px;
+      text-align: right;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .panel {
+      border-radius: var(--radius-lg);
+      padding: 22px;
+      margin-bottom: 20px;
+    }
+
+    .panel-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .panel h2 {
+      font-size: clamp(1.35rem, 2vw, 1.8rem);
+      letter-spacing: -0.03em;
+    }
+
+    .panel-subtitle {
+      color: var(--muted);
+      max-width: 640px;
+      font-size: 14px;
+    }
+
+    .objectives {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .objective-card {
+      border-radius: var(--radius-md);
+      padding: 18px;
+      display: grid;
+      gap: 10px;
+      box-shadow: 0 12px 28px rgba(60,42,20,.08);
+      min-height: 165px;
+    }
+
+    .objective-number {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font-weight: 900;
+      background: var(--paper-solid);
+      border: 1px solid var(--line);
+    }
+
+    .objective-card h3 {
+      font-size: 1.1rem;
+      letter-spacing: -0.02em;
+    }
+
+    .objective-card p {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .quests {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .quest-card,
+    .dormant-card {
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      display: grid;
+      gap: 14px;
+      box-shadow: 0 14px 34px rgba(60,42,20,.09);
+    }
+
+    .quest-card.work { order: 1; }
+    .quest-card.works { order: 2; }
+    .quest-card.health { order: 3; }
+
+    .quest-header {
+      display: grid;
+      gap: 10px;
+    }
+
+    .quest-title-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: flex-start;
+    }
+
+    .quest-card h3,
+    .dormant-card h3 {
+      font-size: 1.35rem;
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+    }
+
+    .badge {
+      display: inline-flex;
+      width: fit-content;
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 12px;
+      font-weight: 800;
+      line-height: 1;
+      border: 1px solid transparent;
+      white-space: nowrap;
+    }
+
+    .badge.main { background: #ece4ff; color: #5f46a8; }
+    .badge.active { background: var(--blue-soft); color: var(--blue); }
+    .badge.sleep { background: var(--plum-soft); color: var(--plum); }
+    .badge.olive { background: var(--olive-soft); color: var(--olive); }
+    .badge.terracotta { background: var(--terracotta-soft); color: var(--terracotta); }
+
+    .quest-summary {
+      color: var(--muted);
+      font-size: 14px;
+      min-height: 64px;
+    }
+
+    .progress {
+      display: grid;
+      gap: 8px;
+    }
+
+    .progress-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .bar {
+      height: 8px;
+      border-radius: 999px;
+      background: rgba(70, 52, 34, 0.10);
+      overflow: hidden;
+    }
+
+    .fill {
+      height: 100%;
+      border-radius: inherit;
+    }
+
+    .fill.blue { width: 18%; background: linear-gradient(90deg, #416f8d, #6b99b5); }
+    .fill.terracotta { width: 36%; background: linear-gradient(90deg, #c76d42, #d68a61); }
+    .fill.olive { width: 24%; background: linear-gradient(90deg, #78894d, #9bac67); }
+    .fill.plum { width: 12%; background: linear-gradient(90deg, #75506f, #9a7394); }
+
+    .priority-block {
+      display: grid;
+      gap: 10px;
+      padding-top: 2px;
+    }
+
+    .priority-title {
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .priority-list {
+      display: grid;
+      gap: 10px;
+      padding: 0;
+      margin: 0;
+      list-style: none;
+      counter-reset: objectives;
+    }
+
+    .priority-list li {
+      counter-increment: objectives;
+      display: grid;
+      grid-template-columns: 28px 1fr;
+      gap: 10px;
+      align-items: start;
+      color: var(--ink);
+      font-size: 14px;
+      line-height: 1.45;
+    }
+
+    .priority-list li::before {
+      content: counter(objectives);
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      margin-top: -2px;
+      background: rgba(255,255,255,.78);
+      border: 1px solid var(--line);
+      font-weight: 900;
+      font-size: 12px;
+    }
+
+    .quest-card.work .priority-list li::before { color: var(--blue); }
+    .quest-card.works .priority-list li::before { color: var(--terracotta); }
+    .quest-card.health .priority-list li::before { color: var(--olive); }
+    .dormant-card .priority-list li::before { color: var(--plum); }
+
+    .quest-foot {
+      margin-top: auto;
+      padding: 12px;
+      border-radius: var(--radius-md);
+      background: rgba(255,255,255,.60);
+      border: 1px solid var(--line);
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .dormant-card {
+      background:
+        linear-gradient(135deg, rgba(117,80,111,.12), rgba(234,221,231,.56)),
+        var(--paper);
+      border-color: rgba(117,80,111,.18);
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: start;
+      gap: 20px;
+    }
+
+    .dormant-copy {
+      display: grid;
+      gap: 12px;
+    }
+
+    .dormant-copy p {
+      color: var(--muted);
+      max-width: 760px;
+      font-size: 14px;
+    }
+
+    .dormant-side {
+      display: grid;
+      justify-items: center;
+      gap: 10px;
+      min-width: 82px;
+    }
+
+    .lock-chip {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 62px;
+      height: 62px;
+      border-radius: 50%;
+      background: var(--plum-soft);
+      border: 1px solid rgba(117,80,111,.22);
+      font-size: 28px;
+    }
+
+    .side-note {
+      text-align: center;
+      font-size: 12px;
+      color: var(--plum);
+      font-weight: 800;
+      max-width: 90px;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 24px;
+      transform: translateX(-50%) translateY(20px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .2s ease, transform .2s ease;
+      background: rgba(46,41,35,.95);
+      color: white;
+      padding: 12px 16px;
+      border-radius: 999px;
+      font-weight: 800;
+      font-size: 13px;
+      box-shadow: 0 18px 40px rgba(0,0,0,.22);
+      z-index: 10;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+
+    .sr-only-file {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    .last-update {
+      max-width: 250px;
+      text-align: right;
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--blue);
+    }
+
+    .progress-value {
+      font-variant-numeric: tabular-nums;
+    }
+
+    .objective-copy {
+      white-space: pre-line;
+    }
+
+    .finance-panel {
+      overflow: hidden;
+      position: relative;
+    }
+
+    .finance-panel::after {
+      content: "";
+      position: absolute;
+      inset: auto -100px -120px auto;
+      width: 260px;
+      height: 260px;
+      border-radius: 50%;
+      background: rgba(197,154,59,.12);
+      pointer-events: none;
+    }
+
+    .finance-grid {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: minmax(240px, .9fr) minmax(0, 1.5fr);
+      gap: 16px;
+      align-items: stretch;
+    }
+
+    .finance-total {
+      border-radius: var(--radius-lg);
+      padding: 22px;
+      display: grid;
+      align-content: space-between;
+      gap: 18px;
+      background:
+        linear-gradient(135deg, rgba(197,154,59,.24), rgba(255,250,242,.88)),
+        var(--paper-solid);
+      border: 1px solid rgba(197,154,59,.24);
+      box-shadow: 0 14px 34px rgba(60,42,20,.08);
+    }
+
+    .finance-total-label {
+      display: inline-flex;
+      width: fit-content;
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: var(--gold-soft);
+      color: #8a691d;
+      font-size: 12px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+
+    .finance-total-value {
+      font-size: clamp(2.2rem, 4vw, 3.6rem);
+      line-height: 1;
+      letter-spacing: -0.06em;
+      font-weight: 950;
+      color: var(--ink);
+    }
+
+    .finance-total-note,
+    .finance-date {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .finance-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .finance-item {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 14px;
+      align-items: center;
+      padding: 15px 16px;
+      border-radius: var(--radius-md);
+      background: rgba(255,255,255,.62);
+      border: 1px solid var(--line);
+      box-shadow: 0 10px 24px rgba(60,42,20,.05);
+    }
+
+    .finance-name {
+      font-weight: 900;
+      letter-spacing: -0.01em;
+      font-size: 15px;
+    }
+
+    .finance-type {
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .finance-amount {
+      white-space: nowrap;
+      font-weight: 950;
+      font-size: 1.2rem;
+      color: #8a691d;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .finance-empty {
+      padding: 16px;
+      border-radius: var(--radius-md);
+      background: rgba(255,255,255,.58);
+      border: 1px dashed rgba(70,52,34,.20);
+      color: var(--muted);
+      font-weight: 800;
+    }
+
+    .active-objective-count {
+      margin-top: -2px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+
+    .micro-icon {
+      display: inline-grid;
+      place-items: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: rgba(255,255,255,.72);
+      border: 1px solid var(--line);
+      font-size: 15px;
+      flex: 0 0 auto;
+    }
+
+    mark {
+      padding: 0 .22em;
+      border-radius: .35em;
+      background: linear-gradient(180deg, transparent 30%, rgba(197,154,59,.34) 30%);
+      color: inherit;
+      font-weight: 900;
+    }
+
+    .tracker-panel {
+      overflow: hidden;
+      position: relative;
+    }
+
+    .tracker-panel::after {
+      content: "";
+      position: absolute;
+      inset: -115px auto auto -90px;
+      width: 230px;
+      height: 230px;
+      border-radius: 50%;
+      background: rgba(120,137,77,.10);
+      pointer-events: none;
+    }
+
+    .tracker-grid {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      gap: 14px;
+    }
+
+    .tracker-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .tracker-chip,
+    .tracker-score {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      border-radius: 999px;
+      padding: 7px 10px;
+      background: rgba(255,255,255,.64);
+      border: 1px solid var(--line);
+    }
+
+    .tracker-table-wrap {
+      overflow: auto;
+      max-height: 470px;
+      padding: 0 4px 2px 0;
+      scrollbar-gutter: stable;
+    }
+
+    .tracker-table-wrap::-webkit-scrollbar {
+      width: 10px;
+      height: 10px;
+    }
+
+    .tracker-table-wrap::-webkit-scrollbar-thumb {
+      background: rgba(65,111,141,.34);
+      border-radius: 999px;
+    }
+
+    .tracker-table-wrap::-webkit-scrollbar-track {
+      background: rgba(70,52,34,.08);
+      border-radius: 999px;
+    }
+
+    .tracker-scroll-hint {
+      margin-top: -2px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .tracker-table thead th {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      background: rgba(255,250,242,.98);
+      backdrop-filter: blur(8px);
+    }
+
+    .tracker-separator td {
+      padding: 10px 12px !important;
+      border-radius: 999px !important;
+      background: var(--blue-soft) !important;
+      color: var(--blue) !important;
+      font-weight: 950 !important;
+      text-align: left !important;
+      letter-spacing: .02em;
+    }
+
+    .tracker-stats {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .tracker-stat {
+      display: grid;
+      gap: 5px;
+      padding: 16px;
+      border-radius: var(--radius-md);
+      background: rgba(255,255,255,.66);
+      border: 1px solid var(--line);
+      box-shadow: 0 10px 24px rgba(60,42,20,.05);
+    }
+
+    .tracker-stat-label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+
+    .tracker-stat-value {
+      font-size: clamp(1.6rem, 2.6vw, 2.2rem);
+      line-height: 1;
+      font-weight: 950;
+      letter-spacing: -0.04em;
+      color: var(--ink);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .tracker-stat-note {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .tracker-history {
+      display: grid;
+      gap: 10px;
+      padding: 16px;
+      border-radius: var(--radius-md);
+      background: rgba(255,255,255,.48);
+      border: 1px solid var(--line);
+    }
+
+    .tracker-history-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .tracker-history-head h3 {
+      font-size: 1rem;
+      letter-spacing: -0.02em;
+    }
+
+    .tracker-history-head p {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .tracker-history-wrap {
+      max-height: 360px;
+      overflow: auto;
+      padding-right: 4px;
+    }
+
+    .tracker-history-wrap .tracker-table {
+      min-width: 920px;
+    }
+
+    .tracker-history-wrap::-webkit-scrollbar {
+      width: 10px;
+      height: 10px;
+    }
+
+    .tracker-history-wrap::-webkit-scrollbar-thumb {
+      background: rgba(65,111,141,.34);
+      border-radius: 999px;
+    }
+
+    .tracker-history-wrap::-webkit-scrollbar-track {
+      background: rgba(70,52,34,.08);
+      border-radius: 999px;
+    }
+
+    .tracker-table {
+      width: 100%;
+      min-width: 920px;
+      border-collapse: separate;
+      border-spacing: 0 8px;
+      font-size: 13px;
+    }
+
+    .tracker-table th {
+      text-align: center;
+      padding: 0 8px 4px;
+      color: var(--muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .tracker-table th:first-child,
+    .tracker-table th:nth-child(2) {
+      text-align: left;
+    }
+
+    .tracker-table td {
+      padding: 11px 9px;
+      text-align: center;
+      background: rgba(255,255,255,.60);
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .tracker-table td:first-child {
+      text-align: left;
+      border-left: 1px solid var(--line);
+      border-radius: 14px 0 0 14px;
+    }
+
+    .tracker-table td:nth-child(2) {
+      text-align: left;
+    }
+
+    .tracker-table td:last-child {
+      border-right: 1px solid var(--line);
+      border-radius: 0 14px 14px 0;
+    }
+
+    .tracker-day-success td {
+      background: rgba(230,234,214,.82);
+    }
+
+    .habit-ok {
+      color: #426324;
+      background: rgba(230,234,214,.94) !important;
+    }
+
+    .habit-ko {
+      color: var(--muted);
+    }
+
+    .day-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 98px;
+      padding: 6px 9px;
+      border-radius: 999px;
+      font-weight: 950;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.84);
+    }
+
+    .day-pill.success {
+      color: #426324;
+      background: var(--olive-soft);
+    }
+
+    .day-pill.pending {
+      color: var(--terracotta);
+      background: var(--terracotta-soft);
+    }
+
+    .active-details {
+      margin-top: 18px;
+      padding: 0;
+      border-radius: var(--radius-lg);
+      background: rgba(255,255,255,.58);
+      border: 1px solid var(--line);
+      overflow: hidden;
+    }
+
+    .active-details summary {
+      cursor: pointer;
+      list-style: none;
+      padding: 18px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      font-weight: 950;
+      letter-spacing: -0.01em;
+    }
+
+    .active-details summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .active-details summary::after {
+      content: "⌄";
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: rgba(255,255,255,.88);
+      border: 1px solid var(--line);
+      transition: transform .18s ease;
+    }
+
+    .active-details[open] summary::after {
+      transform: rotate(180deg);
+    }
+
+    .active-objectives-grid {
+      display: grid;
+      gap: 14px;
+      padding: 0 20px 20px;
+    }
+
+    .active-quest-group {
+      padding: 16px;
+      border-radius: var(--radius-md);
+      background: rgba(255,255,255,.68);
+      border: 1px solid var(--line);
+    }
+
+    .active-quest-head {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+
+    .active-quest-head h3 {
+      font-size: 1.04rem;
+      letter-spacing: -0.02em;
+    }
+
+    .active-task-list {
+      margin: 0;
+      padding-left: 20px;
+      display: grid;
+      gap: 8px;
+      color: var(--ink);
+      font-size: 14px;
+    }
+
+    .active-task-list li {
+      padding-left: 4px;
+      line-height: 1.45;
+    }
+
+    .status-mini {
+      display: inline-flex;
+      width: fit-content;
+      margin-left: 7px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 950;
+      background: var(--blue-soft);
+      color: var(--blue);
+      vertical-align: middle;
+    }
+
+    .status-mini.todo {
+      background: var(--gold-soft);
+      color: #8a691d;
+    }
+
+    @media (max-width: 980px) {
+      .objectives,
+      .quests { grid-template-columns: 1fr; }
+      .dormant-card { grid-template-columns: 1fr; }
+      .lock-chip { width: 54px; height: 54px; font-size: 24px; }
+      .panel-head { flex-direction: column; align-items: flex-start; }
+      .update-wrap { justify-items: start; }
+      .update-hint,
+      .last-update { text-align: left; }
+      .finance-grid { grid-template-columns: 1fr; }
+      .tracker-stats { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <section class="hero">
+      <div class="hero-top">
+        <div>
+          <span class="eyebrow">Second cerveau</span>
+          <h1>Tableau de bord</h1>
+        </div>
+        <div class="update-wrap">
+          <button class="update-btn" id="updateButton" type="button">Mise à jour</button>
+          <input id="sheetFileInput" class="sr-only-file" type="file" accept=".xlsx,.xlsm,.xls" aria-label="Choisir le fichier de suivi des quêtes" />
+          <p class="update-hint">Importer le fichier de suivi pour rafraîchir les quêtes, les barres d’avancement et les résultats financiers.</p>
+          <p class="last-update" id="lastUpdateStamp">Dernière synchronisation : version initiale</p>
+        </div>
+      </div>
+      <p class="hero-copy">Un espace simple pour suivre mes projets, voir ce qui avance vraiment et éviter de traiter toutes mes envies comme si elles devaient progresser en même temps.</p>
+      <div class="hero-note">Je ne cherche pas à tout faire. Je cherche à avancer dans le bon ordre, avec une vision claire de ce qui compte maintenant.</div>
+    </section>
+
+    <section class="panel tracker-panel">
+      <div class="panel-head">
+        <div>
+          <span class="section-kicker">Trackers</span>
+          <h2>Ma semaine en un coup d’œil</h2>
+        </div>
+        <p class="panel-subtitle">Chaque habitude réussie passe au vert. Une journée est <mark>réussie à partir de 4 habitudes sur 7</mark>.</p>
+      </div>
+
+      <div class="tracker-grid">
+        <div class="tracker-legend">
+          <span class="tracker-chip"><span class="micro-icon" aria-hidden="true">✅</span> Habitude réussie</span>
+          <span class="tracker-chip"><span class="micro-icon" aria-hidden="true">🏁</span> Journée réussie : 4/7 minimum</span>
+          <span class="tracker-score" id="trackerWeekSummary">Semaine en cours : données à importer</span>
+        </div>
+
+        <div class="tracker-stats" aria-label="Statistiques du suivi des habitudes">
+          <article class="tracker-stat">
+            <div class="tracker-stat-label">Journées validées</div>
+            <div class="tracker-stat-value" id="trackerValidatedDays">—</div>
+            <div class="tracker-stat-note">Depuis le 04/05/2026.</div>
+          </article>
+          <article class="tracker-stat">
+            <div class="tracker-stat-label">Taux de réussite</div>
+            <div class="tracker-stat-value" id="trackerSuccessRate">—</div>
+            <div class="tracker-stat-note">Sur les journées passées du suivi.</div>
+          </article>
+          <article class="tracker-stat">
+            <div class="tracker-stat-label">Habitudes validées</div>
+            <div class="tracker-stat-value" id="trackerHabitWins">—</div>
+            <div class="tracker-stat-note">Toutes réussites cumulées.</div>
+          </article>
+        </div>
+
+        <div class="tracker-table-wrap">
+          <table class="tracker-table" aria-label="Suivi des habitudes et historique des trackers">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Jour</th>
+                <th>💪 Sport</th>
+                <th>🍷 Alcool</th>
+                <th>🍽️ Alimentation</th>
+                <th>🛠️ Travaux</th>
+                <th>🧠 Tâche de fond</th>
+                <th>📣 Post Insta</th>
+                <th>🛍️ Vente</th>
+                <th>Bilan</th>
+              </tr>
+            </thead>
+            <tbody id="trackerBody">
+              <tr>
+                <td colspan="10">Importer le fichier de suivi pour afficher la semaine en cours.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p class="tracker-scroll-hint">Faire défiler le tableau pour retrouver les jours et semaines précédents.</p>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <div>
+          <span class="section-kicker">Gros objectifs</span>
+          <h2>Ce que ce tableau de bord doit m’aider à faire</h2>
+        </div>
+        <p class="panel-subtitle">Trois repères transversaux pour guider toutes les quêtes sans recréer une nouvelle charge mentale.</p>
+      </div>
+
+      <div class="objectives">
+        <article class="objective-card">
+          <div class="objective-number">1</div>
+          <h3><span class="micro-icon" aria-hidden="true">⏳</span> Accepter mon vrai temps disponible</h3>
+          <p>Me rappeler que mon temps et mon énergie sont <mark>limités</mark> : si le boulot, les courses ou les travaux prennent de la place, ce n’est pas un échec. C’est la réalité de la journée.</p>
+        </article>
+
+        <article class="objective-card">
+          <div class="objective-number">2</div>
+          <h3><span class="micro-icon" aria-hidden="true">🎯</span> Savoir quoi faire maintenant</h3>
+          <p>Réduire la charge mentale en gardant des <mark>objectifs clairs</mark> et un ordre de priorité. Je ne dois plus arbitrer toutes mes vies à chaque début de soirée.</p>
+        </article>
+
+        <article class="objective-card">
+          <div class="objective-number">3</div>
+          <h3><span class="micro-icon" aria-hidden="true">🌱</span> Voir que j’avance déjà</h3>
+          <p>Rendre visibles les <mark>progrès concrets</mark>, les habitudes tenues et les étapes terminées, pour ne pas confondre une avancée lente avec une stagnation.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="panel finance-panel">
+      <div class="panel-head">
+        <div>
+          <span class="section-kicker">Résultats financiers</span>
+          <h2>Ce qui progresse aussi en arrière-plan</h2>
+        </div>
+        <p class="panel-subtitle">Un rappel motivant de ce qui est déjà construit. Les montants sont lus depuis l’onglet Informations du fichier de suivi.</p>
+      </div>
+
+      <div class="finance-grid">
+        <article class="finance-total">
+          <div>
+            <div class="finance-total-label">Total suivi</div>
+            <div class="finance-total-value" id="financeTotal">14 230 €</div>
+          </div>
+          <div>
+            <div class="finance-total-note">Somme des enveloppes renseignées.</div>
+            <div class="finance-date" id="financeDate">Date du fichier : 14/05/2026</div>
+          </div>
+        </article>
+
+        <div class="finance-list" id="financeList">
+          <article class="finance-item">
+            <div>
+              <div class="finance-name">Plan Epargne Actions (Bourse Direct)</div>
+              <div class="finance-type">Actions et Fonds</div>
+            </div>
+            <div class="finance-amount">4 547 €</div>
+          </article>
+          <article class="finance-item">
+            <div>
+              <div class="finance-name">Compte Titre Ordinaire (Bourse Direct)</div>
+              <div class="finance-type">Actions et Fonds</div>
+            </div>
+            <div class="finance-amount">229 €</div>
+          </article>
+          <article class="finance-item">
+            <div>
+              <div class="finance-name">Assurance vie (LINXEA)</div>
+              <div class="finance-type">Actions et Fonds</div>
+            </div>
+            <div class="finance-amount">1 168 €</div>
+          </article>
+          <article class="finance-item">
+            <div>
+              <div class="finance-name">Plan Epargne Retraire (SwissLife)</div>
+              <div class="finance-type">Actions et Fonds</div>
+            </div>
+            <div class="finance-amount">1 947 €</div>
+          </article>
+          <article class="finance-item">
+            <div>
+              <div class="finance-name">Livret A (LCL)</div>
+              <div class="finance-type">Livret</div>
+            </div>
+            <div class="finance-amount">6 339 €</div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <div>
+          <span class="section-kicker">Quêtes principales</span>
+          <h2>Les 3 priorités actives</h2>
+        </div>
+        <p class="panel-subtitle">Chaque quête met en avant les trois objectifs à finaliser avant d’ouvrir davantage le sujet.</p>
+      </div>
+
+      <div class="quests">
+        <article class="quest-card work" data-quest="Boulot &amp; évolution pro">
+          <div class="quest-header">
+            <span class="quest-type">Quête principale</span>
+            <div class="quest-title-row">
+              <h3>Boulot &amp; évolution pro</h3>
+              <span class="badge active">Priorité 1</span>
+            </div>
+          </div>
+          <p class="quest-summary">Me redonner de la marge face à un travail qui m’épuise : clarifier mon profil, comprendre le marché et être prêt à bouger.</p>
+          <div class="progress">
+            <div class="progress-head"><span>Préparation</span><span class="progress-value" data-role="progress-label">0%</span></div>
+            <div class="bar"><div class="fill blue" data-role="progress-fill" style="width:0%;"></div></div>
+          </div>
+          <div class="priority-block">
+            <div class="priority-title">Les 3 objectifs à finaliser</div>
+            <ol class="priority-list" data-role="objective-list">
+              <li><span class="objective-copy">Etat des lieux de mes compétences actuelles via une fiche de missions Safer</span></li>
+              <li><span class="objective-copy">Analyse du marché de l'emploi et enregistrer des offres. Etat des lieux des compétences recherchées</span></li>
+              <li><span class="objective-copy">Quel futur pour les géomaticiens et l'IA</span></li>
+            </ol>
+            <div class="active-objective-count" data-role="objective-count">5 objectifs actifs dans le fichier.</div>
+          </div>
+          <div class="quest-foot">Cap visé : pouvoir répondre sérieusement à une offre intéressante dès qu’elle apparaît.</div>
+        </article>
+
+        <article class="quest-card works" data-quest="Travaux appartement">
+          <div class="quest-header">
+            <span class="quest-type">Quête principale</span>
+            <div class="quest-title-row">
+              <h3>Travaux</h3>
+              <span class="badge terracotta">Priorité 2</span>
+            </div>
+          </div>
+          <p class="quest-summary">Finaliser l’appartement avec un ordre clair : avancer pièce par pièce, sécuriser les étapes structurantes et éviter l’éparpillement.</p>
+          <div class="progress">
+            <div class="progress-head"><span>Vue globale</span><span class="progress-value" data-role="progress-label">11%</span></div>
+            <div class="bar"><div class="fill terracotta" data-role="progress-fill" style="width:10.7%;"></div></div>
+          </div>
+          <div class="priority-block">
+            <div class="priority-title">Les 3 objectifs à finaliser</div>
+            <ol class="priority-list" data-role="objective-list">
+              <li><span class="objective-copy">CUISINE - Finaliser la peinture des murs</span></li>
+              <li><span class="objective-copy">CUISINE - Faire les couches de peinture du plafond</span></li>
+              <li><span class="objective-copy">BUREAU - Gaine électrique, trou plafonnier, grille aération</span></li>
+            </ol>
+            <div class="active-objective-count" data-role="objective-count">7 objectifs actifs dans le fichier.</div>
+          </div>
+          <div class="quest-foot">Cap visé : appartement terminé au plus tard en décembre, hors imprévu majeur.</div>
+        </article>
+
+        <article class="quest-card health" data-quest="Santé &amp; sport">
+          <div class="quest-header">
+            <span class="quest-type">Quête principale</span>
+            <div class="quest-title-row">
+              <h3>Santé &amp; sport</h3>
+              <span class="badge olive">Priorité 3</span>
+            </div>
+          </div>
+          <p class="quest-summary">Reprendre la main sur mon corps sans construire une usine à gaz : régularité, repas plus simples et vraie routine maison.</p>
+          <div class="progress">
+            <div class="progress-head"><span>Base lancée</span><span class="progress-value" data-role="progress-label">0%</span></div>
+            <div class="bar"><div class="fill olive" data-role="progress-fill" style="width:0%;"></div></div>
+          </div>
+          <div class="priority-block">
+            <div class="priority-title">Les 3 objectifs à finaliser</div>
+            <ol class="priority-list" data-role="objective-list">
+              <li><span class="objective-copy">Fixer les jours de sport par semaine des jours fixes et s'y tenir.</span></li>
+              <li><span class="objective-copy">Créer une session de sport fixe. Pas de prise de tête</span></li>
+              <li><span class="objective-copy">Créer une liste de repas simples et les courses associées pour réduire la charge mentale.</span></li>
+            </ol>
+            <div class="active-objective-count" data-role="objective-count">6 objectifs actifs dans le fichier.</div>
+          </div>
+          <div class="quest-foot">Cap visé : retrouver un cadre tenable pour perdre du ventre et redessiner progressivement le haut du corps.</div>
+        </article>
+      </div>
+
+      <article class="dormant-card" data-quest="Viens on y va !">
+        <div class="dormant-copy">
+          <span class="quest-type">Quête secondaire dormante</span>
+          <div class="quest-title-row" style="justify-content:flex-start; align-items:center; gap:10px;">
+            <h3>Viens on y va !</h3>
+            <span class="badge sleep">En veille active</span>
+          </div>
+          <p>La marque n’est pas abandonnée. Elle reste visible dans le tableau de bord, avec des objectifs légers, sans prendre la place des trois priorités principales.</p>
+          <div class="progress">
+            <div class="progress-head"><span>Entretien léger</span><span class="progress-value" data-role="progress-label">7%</span></div>
+            <div class="bar"><div class="fill plum" data-role="progress-fill" style="width:6.7%;"></div></div>
+          </div>
+          <div class="priority-block">
+            <div class="priority-title">Objectifs non prioritaires</div>
+            <ol class="priority-list" data-role="objective-list">
+              <li><span class="objective-copy">Clarifier l'identité de la marque
+- Finaliser en une page : positionnement, style visuel, promesse, univers, ton.
+- Objectif : ne plus repartir de zéro à chaque décision.</span></li>
+              <li><span class="objective-copy">Constituer une réserve d’idées d’illustrations
+- Créer une liste de lieux, collections possibles, formats, envies.
+- Objectif : garder le feu allumé sans te mettre la pression de produire tout de suite.</span></li>
+              <li><span class="objective-copy">Optimiser l'existant sur Etsy
+- Revoir titres, descriptions, mots-clés et visuels des fiches déjà en ligne.
+- C’est un levier “entretien” assez raisonnable.</span></li>
+            </ol>
+            <div class="active-objective-count" data-role="objective-count">3 objectifs actifs dans le fichier.</div>
+          </div>
+        </div>
+        <div class="dormant-side">
+          <div class="lock-chip" aria-hidden="true">✦</div>
+          <div class="side-note">Présente, mais pas prioritaire</div>
+        </div>
+      </article>
+
+      <details class="active-details" id="activeObjectiveDetails">
+        <summary>
+          <span><span class="micro-icon" aria-hidden="true">🗂️</span> Voir l’ensemble des objectifs actifs du fichier</span>
+          <span class="badge main" id="activeObjectiveTotal">Masqué par défaut</span>
+        </summary>
+        <div class="active-objectives-grid" id="activeObjectivesFull">
+          <div class="active-quest-group">
+            <div class="active-quest-head">
+              <h3>Importe le fichier pour afficher tous les objectifs actifs</h3>
+            </div>
+          </div>
+        </div>
+      </details>
+    </section>
+  </main>
+
+  <div class="toast" id="updateToast" role="status" aria-live="polite">Tableau de bord mis à jour.</div>
+
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script>
+    const updateButton = document.getElementById('updateButton');
+    const sheetFileInput = document.getElementById('sheetFileInput');
+    const updateToast = document.getElementById('updateToast');
+    const lastUpdateStamp = document.getElementById('lastUpdateStamp');
+    const financeTotal = document.getElementById('financeTotal');
+    const financeDate = document.getElementById('financeDate');
+    const financeList = document.getElementById('financeList');
+    const trackerBody = document.getElementById('trackerBody');
+    const trackerWeekSummary = document.getElementById('trackerWeekSummary');
+    const trackerValidatedDays = document.getElementById('trackerValidatedDays');
+    const trackerSuccessRate = document.getElementById('trackerSuccessRate');
+    const trackerHabitWins = document.getElementById('trackerHabitWins');
+    const activeObjectivesFull = document.getElementById('activeObjectivesFull');
+    const activeObjectiveTotal = document.getElementById('activeObjectiveTotal');
+    let toastTimer;
+
+    const questAliases = {
+      "Boulot & évolution pro": ["Boulot & évolution pro"],
+      "Travaux appartement": ["Travaux appartement", "Travaux"],
+      "Santé & sport": ["Santé & sport"],
+      "Viens on y va !": ["Viens on y va !"]
+    };
+
+    function normalizeText(value) {
+      return String(value ?? "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .trim()
+        .toLowerCase();
+    }
+
+    function formatCurrency(value) {
+      return new Intl.NumberFormat("fr-FR", {
+        style: "currency",
+        currency: "EUR",
+        maximumFractionDigits: 0
+      }).format(Number(value || 0));
+    }
+
+    function formatDate(value) {
+      if (!(value instanceof Date) || Number.isNaN(value.getTime())) return "";
+      return new Intl.DateTimeFormat("fr-FR", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric"
+      }).format(value);
+    }
+
+    function dateFromExcel(value) {
+      if (value instanceof Date) {
+        return new Date(value.getFullYear(), value.getMonth(), value.getDate());
+      }
+      if (typeof value === "number" && Number.isFinite(value)) {
+        const serial = Math.floor(value);
+        const utc = new Date(Date.UTC(1899, 11, 30) + serial * 86400000);
+        return new Date(utc.getUTCFullYear(), utc.getUTCMonth(), utc.getUTCDate());
+      }
+      const parsed = new Date(value);
+      return Number.isNaN(parsed.getTime())
+        ? null
+        : new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
+    }
+
+    function showToast(message) {
+      updateToast.textContent = message;
+      updateToast.classList.add("show");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        updateToast.classList.remove("show");
+      }, 3200);
+    }
+
+    function resolveQuestName(input) {
+      const normalized = normalizeText(input);
+      return Object.entries(questAliases).find(([, aliases]) =>
+        aliases.some(alias => normalizeText(alias) === normalized)
+      )?.[0] || String(input ?? "").trim();
+    }
+
+    function questCardFor(name) {
+      return document.querySelector(`[data-quest="${CSS.escape(name)}"]`);
+    }
+
+    function setProgress(card, progress) {
+      const safe = Math.max(0, Math.min(100, Number(progress || 0)));
+      const label = card?.querySelector('[data-role="progress-label"]');
+      const fill = card?.querySelector('[data-role="progress-fill"]');
+      if (label) label.textContent = `${Math.round(safe)}%`;
+      if (fill) fill.style.width = `${safe}%`;
+    }
+
+    function setObjectiveList(card, rows) {
+      const list = card?.querySelector('[data-role="objective-list"]');
+      const counter = card?.querySelector('[data-role="objective-count"]');
+      if (!list) return;
+
+      const topRows = rows.slice(0, 3);
+      list.innerHTML = "";
+
+      if (!topRows.length) {
+        const li = document.createElement("li");
+        const span = document.createElement("span");
+        span.className = "objective-copy";
+        span.textContent = "Aucun objectif actif à afficher.";
+        li.appendChild(span);
+        list.appendChild(li);
+      } else {
+        topRows.forEach(row => {
+          const li = document.createElement("li");
+          const span = document.createElement("span");
+          span.className = "objective-copy";
+          span.textContent = String(row.objective || "").trim();
+          li.appendChild(span);
+          list.appendChild(li);
+        });
+      }
+
+      if (counter) {
+        counter.textContent = `${rows.length} objectif${rows.length > 1 ? "s" : ""} actif${rows.length > 1 ? "s" : ""} dans le fichier.`;
+      }
+    }
+
+
+    function renderFullActiveObjectives(rows) {
+      if (!activeObjectivesFull || !activeObjectiveTotal) return;
+
+      const grouped = {};
+      rows.forEach(row => {
+        grouped[row.quest] ||= [];
+        grouped[row.quest].push(row);
+      });
+
+      const total = rows.length;
+      activeObjectiveTotal.textContent = `${total} objectif${total > 1 ? "s" : ""} actif${total > 1 ? "s" : ""}`;
+
+      activeObjectivesFull.innerHTML = "";
+      const questOrder = Object.keys(questAliases);
+
+      questOrder.forEach(quest => {
+        const questRows = grouped[quest] || [];
+        if (!questRows.length) return;
+
+        const group = document.createElement("section");
+        group.className = "active-quest-group";
+
+        const head = document.createElement("div");
+        head.className = "active-quest-head";
+
+        const title = document.createElement("h3");
+        title.textContent = quest;
+        head.appendChild(title);
+
+        const count = document.createElement("span");
+        count.className = "badge main";
+        count.textContent = `${questRows.length} actif${questRows.length > 1 ? "s" : ""}`;
+        head.appendChild(count);
+
+        const list = document.createElement("ol");
+        list.className = "active-task-list";
+
+        questRows.forEach(row => {
+          const li = document.createElement("li");
+          const objective = document.createElement("span");
+          objective.textContent = String(row.objective || "").trim();
+          li.appendChild(objective);
+
+          const status = document.createElement("span");
+          const statusNorm = normalizeText(row.status);
+          status.className = `status-mini ${statusNorm === "a faire" ? "todo" : ""}`;
+          status.textContent = row.status || "Actif";
+          li.appendChild(status);
+
+          list.appendChild(li);
+        });
+
+        group.append(head, list);
+        activeObjectivesFull.appendChild(group);
+      });
+
+      if (!activeObjectivesFull.children.length) {
+        activeObjectivesFull.innerHTML = `
+          <div class="active-quest-group">
+            <div class="active-quest-head">
+              <h3>Aucun objectif actif à afficher.</h3>
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    const trackerHabits = [
+      { key: "Séance de sport", label: "Sport", icon: "💪" },
+      { key: "Alcool", label: "Alcool", icon: "🍷" },
+      { key: "Journée alimentaire", label: "Alimentation", icon: "🍽️" },
+      { key: "Travaux", label: "Travaux", icon: "🛠️" },
+      { key: "Tache de fond", label: "Tâche de fond", icon: "🧠" },
+      { key: "Post Insta", label: "Post Insta", icon: "📣" },
+      { key: "Vente", label: "Vente", icon: "🛍️" }
+    ];
+
+    function isTrackerSuccess(key, value) {
+      const normalized = normalizeText(value);
+      if (key === "Alcool") return normalized === "pas d'alcool" || normalized === "pas d alcool" || normalized === "pas dalcool";
+      return normalized === "oui";
+    }
+
+    function parseTrackers(workbook) {
+      const ws = workbook.Sheets["TRACKERS"] || workbook.Sheets["Trackers"] || workbook.Sheets["trackers"];
+      if (!ws) return [];
+
+      const rows = XLSX.utils.sheet_to_json(ws, { defval: "" });
+      const parsedRows = rows
+        .map((row, index) => {
+          const rawDate = row["Date"];
+          const date = dateFromExcel(rawDate);
+          const habits = trackerHabits.map(habit => {
+            const raw = row[habit.key];
+            const success = isTrackerSuccess(habit.key, raw);
+            return { ...habit, raw, success };
+          });
+          const successCount = habits.filter(habit => habit.success).length;
+          return {
+            index,
+            date,
+            day: String(row["Jour"] || "").trim(),
+            week: String(row["Semaine"] || "").trim(),
+            habits,
+            successCount,
+            daySuccess: successCount >= 4
+          };
+        })
+        .filter(row => row.date || row.day || row.week);
+
+      return dedupeTrackerRows(parsedRows)
+        .sort((a, b) => {
+          const at = a.date instanceof Date && !Number.isNaN(a.date.getTime()) ? a.date.getTime() : a.index;
+          const bt = b.date instanceof Date && !Number.isNaN(b.date.getTime()) ? b.date.getTime() : b.index;
+          return at - bt;
+        });
+    }
+
+    function startOfLocalDay(date) {
+      return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    }
+
+    function localDateKey(date) {
+      if (!(date instanceof Date) || Number.isNaN(date.getTime())) return "";
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, "0");
+      const d = String(date.getDate()).padStart(2, "0");
+      return `${y}-${m}-${d}`;
+    }
+
+    function trackerToday() {
+      return startOfLocalDay(new Date());
+    }
+
+    function trackerStartDate() {
+      return new Date(2026, 4, 4);
+    }
+
+    function getMonday(date) {
+      const base = startOfLocalDay(date);
+      const day = (base.getDay() + 6) % 7;
+      base.setDate(base.getDate() - day);
+      return base;
+    }
+
+    function addDays(date, days) {
+      const copy = startOfLocalDay(date);
+      copy.setDate(copy.getDate() + days);
+      return copy;
+    }
+
+    function formatWeekday(date) {
+      if (!(date instanceof Date) || Number.isNaN(date.getTime())) return "—";
+      const label = new Intl.DateTimeFormat("fr-FR", { weekday: "long" }).format(date);
+      return label.charAt(0).toUpperCase() + label.slice(1);
+    }
+
+    function emptyTrackerRow(date) {
+      const habits = trackerHabits.map(habit => ({ ...habit, raw: "", success: false }));
+      return {
+        index: Number.MAX_SAFE_INTEGER,
+        date,
+        day: formatWeekday(date),
+        week: "",
+        habits,
+        successCount: 0,
+        daySuccess: false
+      };
+    }
+
+    function rowHasTrackerData(row) {
+      return row.habits.some(habit => String(habit.raw || "").trim() !== "");
+    }
+
+    function trackerDataScore(row) {
+      return row.habits.reduce((score, habit) => {
+        return score + (String(habit.raw || "").trim() ? 1 : 0);
+      }, 0);
+    }
+
+    function dedupeTrackerRows(rows) {
+      const rowsByDate = new Map();
+
+      rows.forEach(row => {
+        const dateKey = row.date instanceof Date && !Number.isNaN(row.date.getTime())
+          ? localDateKey(row.date)
+          : `sans-date-${row.index}`;
+        const existing = rowsByDate.get(dateKey);
+
+        if (!existing) {
+          rowsByDate.set(dateKey, row);
+          return;
+        }
+
+        const currentScore = trackerDataScore(row);
+        const existingScore = trackerDataScore(existing);
+
+        if (currentScore > existingScore) {
+          rowsByDate.set(dateKey, row);
+          return;
+        }
+
+        if (currentScore === existingScore && row.index < existing.index) {
+          rowsByDate.set(dateKey, row);
+        }
+      });
+
+      return Array.from(rowsByDate.values());
+    }
+
+    function currentWeekTrackerRows(rows) {
+      const monday = getMonday(trackerToday());
+      const rowByDate = new Map(
+        rows
+          .filter(row => row.date instanceof Date && !Number.isNaN(row.date.getTime()))
+          .map(row => [localDateKey(row.date), row])
+      );
+
+      return Array.from({ length: 7 }, (_, index) => {
+        const date = addDays(monday, index);
+        const row = rowByDate.get(localDateKey(date)) || emptyTrackerRow(date);
+        return {
+          ...row,
+          date,
+          day: formatWeekday(date)
+        };
+      });
+    }
+
+    function pastTrackerRows(rows) {
+      const start = trackerStartDate().getTime();
+      const today = trackerToday().getTime();
+      return rows
+        .filter(row => row.date instanceof Date && !Number.isNaN(row.date.getTime()))
+        .filter(row => row.date.getTime() >= start && row.date.getTime() <= today)
+        .sort((a, b) => b.date.getTime() - a.date.getTime());
+    }
+
+    function renderTrackerTableRow(row, body, options = {}) {
+      const tr = document.createElement("tr");
+      const today = trackerToday().getTime();
+      const isFuture = row.date instanceof Date && row.date.getTime() > today;
+      const hasData = rowHasTrackerData(row);
+      if (row.daySuccess) tr.className = "tracker-day-success";
+
+      const dateCell = document.createElement("td");
+      dateCell.textContent = row.date ? formatDate(row.date) : "—";
+      tr.appendChild(dateCell);
+
+      const dayCell = document.createElement("td");
+      dayCell.textContent = row.date ? formatWeekday(row.date) : (row.day || "—");
+      tr.appendChild(dayCell);
+
+      row.habits.forEach(habit => {
+        const td = document.createElement("td");
+        td.className = habit.success ? "habit-ok" : "habit-ko";
+        td.textContent = habit.success ? "✓" : "·";
+        td.title = `${habit.label} : ${habit.raw || "non renseigné"}`;
+        tr.appendChild(td);
+      });
+
+      const bilanCell = document.createElement("td");
+      const pill = document.createElement("span");
+      if (isFuture && !hasData) {
+        pill.className = "day-pill pending";
+        pill.textContent = "À venir";
+      } else {
+        pill.className = `day-pill ${row.daySuccess ? "success" : "pending"}`;
+        pill.textContent = row.daySuccess ? `Réussie ${row.successCount}/7` : `${row.successCount}/7`;
+      }
+      bilanCell.appendChild(pill);
+      tr.appendChild(bilanCell);
+
+      body.appendChild(tr);
+    }
+
+    function renderTrackerStats(rows) {
+      if (!trackerValidatedDays || !trackerSuccessRate || !trackerHabitWins) return;
+
+      const pastRows = pastTrackerRows(rows);
+      const validDays = pastRows.filter(row => row.daySuccess).length;
+      const trackedDays = pastRows.length;
+      const habitWins = pastRows.reduce((sum, row) => sum + Number(row.successCount || 0), 0);
+      const rate = trackedDays ? Math.round((validDays / trackedDays) * 100) : 0;
+
+      trackerValidatedDays.textContent = String(validDays);
+      trackerSuccessRate.textContent = `${rate}%`;
+      trackerHabitWins.textContent = String(habitWins);
+    }
+
+    function previousTrackerRows(rows, currentRows) {
+      const currentDates = new Set(
+        currentRows
+          .filter(row => row.date instanceof Date && !Number.isNaN(row.date.getTime()))
+          .map(row => localDateKey(row.date))
+      );
+
+      return pastTrackerRows(rows)
+        .filter(row => !currentDates.has(localDateKey(row.date)))
+        .sort((a, b) => b.date.getTime() - a.date.getTime());
+    }
+
+    function appendTrackerSeparator(body, label) {
+      const tr = document.createElement("tr");
+      tr.className = "tracker-separator";
+      const td = document.createElement("td");
+      td.colSpan = 10;
+      td.textContent = label;
+      tr.appendChild(td);
+      body.appendChild(tr);
+    }
+
+    function fitTrackerViewportToCurrentWeek() {
+      const wrap = document.querySelector(".tracker-table-wrap");
+      const table = wrap?.querySelector(".tracker-table");
+      const body = table?.tBodies?.[0];
+      const header = table?.tHead;
+      if (!wrap || !table || !body || !header) return;
+
+      requestAnimationFrame(() => {
+        const rows = Array.from(body.rows).slice(0, 7);
+        if (!rows.length) return;
+        const headerHeight = header.getBoundingClientRect().height;
+        const rowsHeight = rows.reduce((sum, row) => sum + row.getBoundingClientRect().height, 0);
+        const visibleGapAllowance = 8 * Math.max(rows.length, 1) + 12;
+        wrap.style.maxHeight = `${Math.ceil(headerHeight + rowsHeight + visibleGapAllowance)}px`;
+        wrap.scrollTop = 0;
+      });
+    }
+
+    function renderTrackersFromRows(rows) {
+      if (!trackerBody || !trackerWeekSummary) return;
+
+      const currentRows = currentWeekTrackerRows(rows);
+      const previousRows = previousTrackerRows(rows, currentRows);
+      const today = trackerToday().getTime();
+      const elapsedCurrentRows = currentRows.filter(row => row.date.getTime() <= today);
+      const currentSuccessDays = elapsedCurrentRows.filter(row => row.daySuccess).length;
+      const monday = currentRows[0]?.date;
+      const sunday = currentRows[currentRows.length - 1]?.date;
+
+      trackerBody.innerHTML = "";
+      currentRows.forEach(row => renderTrackerTableRow(row, trackerBody));
+
+      if (previousRows.length) {
+        appendTrackerSeparator(trackerBody, "Jours précédents");
+        previousRows.forEach(row => renderTrackerTableRow(row, trackerBody));
+      }
+
+      const weekLabel = monday && sunday
+        ? `Semaine du ${formatDate(monday)} au ${formatDate(sunday)}`
+        : "Semaine en cours";
+      trackerWeekSummary.textContent = `${weekLabel} : ${currentSuccessDays}/${elapsedCurrentRows.length} journée${elapsedCurrentRows.length > 1 ? "s" : ""} validée${currentSuccessDays > 1 ? "s" : ""} à ce jour`;
+
+      renderTrackerStats(rows);
+      fitTrackerViewportToCurrentWeek();
+    }
+
+    function parseObjectives(workbook) {
+      const ws = workbook.Sheets["Objectifs"];
+      if (!ws) throw new Error("L’onglet Objectifs est introuvable.");
+      const rows = XLSX.utils.sheet_to_json(ws, { range: 3, defval: "" });
+
+      return rows
+        .map(row => ({
+          quest: resolveQuestName(row["Quête"]),
+          rank: Number(row["Rang objectif"] || 999),
+          order: Number(row["Ordre quête"] || 999),
+          objective: row["Objectif clair"],
+          status: row["Statut"],
+          show: row["Afficher sur site ?"],
+          progress: Number(row["Avancement (%)"] || 0)
+        }))
+        .filter(row => String(row.objective || "").trim())
+        .filter(row => normalizeText(row.show) === "oui")
+        .filter(row => ["a faire", "en cours"].includes(normalizeText(row.status)))
+        .sort((a, b) => a.order - b.order || a.rank - b.rank);
+    }
+
+    function parseQuestSummary(workbook, fallbackObjectives) {
+      const ws = workbook.Sheets["Quêtes"];
+      const fallback = {};
+      fallbackObjectives.forEach(row => {
+        fallback[row.quest] ||= [];
+        fallback[row.quest].push(row.progress);
+      });
+
+      const summary = {};
+      Object.entries(fallback).forEach(([quest, values]) => {
+        summary[quest] = values.length
+          ? values.reduce((sum, value) => sum + Number(value || 0), 0) / values.length
+          : 0;
+      });
+
+      if (!ws) return summary;
+
+      const rows = XLSX.utils.sheet_to_json(ws, { range: 2, defval: "" });
+      rows.forEach(row => {
+        const quest = resolveQuestName(row["Quête"]);
+        const progress = Number(row["Avancement moyen (%)"]);
+        if (quest && Number.isFinite(progress)) summary[quest] = progress;
+      });
+      return summary;
+    }
+
+    function renderQuests(workbook) {
+      const objectives = parseObjectives(workbook);
+      const grouped = {};
+      objectives.forEach(row => {
+        grouped[row.quest] ||= [];
+        grouped[row.quest].push(row);
+      });
+
+      Object.keys(questAliases).forEach(quest => {
+        const card = questCardFor(quest);
+        const rows = grouped[quest] || [];
+        setObjectiveList(card, rows);
+      });
+
+      renderFullActiveObjectives(objectives);
+
+      const summary = parseQuestSummary(workbook, objectives);
+      Object.entries(summary).forEach(([quest, progress]) => {
+        const card = questCardFor(quest);
+        if (card) setProgress(card, progress);
+      });
+    }
+
+    function renderFinance(workbook) {
+      const ws = workbook.Sheets["Informations"] || workbook.Sheets["Intormations"];
+      if (!ws) {
+        financeTotal.textContent = "—";
+        financeDate.textContent = "Onglet Informations non trouvé.";
+        financeList.innerHTML = '<div class="finance-empty">Aucune donnée financière disponible dans le fichier.</div>';
+        return;
+      }
+
+      const rows = XLSX.utils.sheet_to_json(ws, { defval: "" });
+      const accounts = [];
+      let snapshotDate = null;
+
+      rows.forEach(row => {
+        const label = String(row["Type de compte"] ?? "").trim();
+        const normalizedLabel = normalizeText(label);
+        const amount = row["Résultat"];
+
+        if (normalizedLabel === "date") {
+          snapshotDate = dateFromExcel(amount);
+          return;
+        }
+
+        if (!label) return;
+        const numericAmount = Number(amount);
+        if (!Number.isFinite(numericAmount)) return;
+
+        accounts.push({
+          label,
+          type: String(row["Type"] ?? "").trim(),
+          amount: numericAmount
+        });
+      });
+
+      const total = accounts.reduce((sum, item) => sum + item.amount, 0);
+      financeTotal.textContent = formatCurrency(total);
+      financeDate.textContent = snapshotDate
+        ? `Date du fichier : ${formatDate(snapshotDate)}`
+        : "Date du fichier : non renseignée";
+
+      if (!accounts.length) {
+        financeList.innerHTML = '<div class="finance-empty">Aucun résultat financier exploitable.</div>';
+        return;
+      }
+
+      financeList.innerHTML = "";
+      accounts.forEach(item => {
+        const article = document.createElement("article");
+        article.className = "finance-item";
+
+        const left = document.createElement("div");
+        const name = document.createElement("div");
+        name.className = "finance-name";
+        name.textContent = item.label;
+        const type = document.createElement("div");
+        type.className = "finance-type";
+        type.textContent = item.type || "Catégorie non renseignée";
+        left.append(name, type);
+
+        const amount = document.createElement("div");
+        amount.className = "finance-amount";
+        amount.textContent = formatCurrency(item.amount);
+
+        article.append(left, amount);
+        financeList.appendChild(article);
+      });
+    }
+
+    function storeWorkbookSnapshot(workbook) {
+      const objectives = parseObjectives(workbook);
+      const summary = parseQuestSummary(workbook, objectives);
+      const ws = workbook.Sheets["Informations"] || workbook.Sheets["Intormations"];
+      const financeRows = ws ? XLSX.utils.sheet_to_json(ws, { defval: "" }) : [];
+      const trackerRows = parseTrackers(workbook).map(row => ({
+        ...row,
+        date: row.date instanceof Date && !Number.isNaN(row.date.getTime()) ? row.date.toISOString() : null
+      }));
+      const stamp = new Date();
+
+      localStorage.setItem("bastien-dashboard-cache", JSON.stringify({
+        objectives,
+        summary,
+        financeRows,
+        trackerRows,
+        syncedAt: stamp.toISOString()
+      }));
+      lastUpdateStamp.textContent = `Dernière synchronisation : ${formatDate(stamp)}`;
+    }
+
+    function renderCache(cache) {
+      if (!cache) return;
+      const grouped = {};
+      (cache.objectives || []).forEach(row => {
+        grouped[row.quest] ||= [];
+        grouped[row.quest].push(row);
+      });
+      Object.keys(questAliases).forEach(quest => {
+        const card = questCardFor(quest);
+        setObjectiveList(card, grouped[quest] || []);
+        if (cache.summary && quest in cache.summary) setProgress(card, cache.summary[quest]);
+      });
+
+      renderFullActiveObjectives(cache.objectives || []);
+
+      if (Array.isArray(cache.financeRows)) {
+        const fakeBook = { Sheets: { Informations: XLSX.utils.json_to_sheet(cache.financeRows) } };
+        renderFinance(fakeBook);
+      }
+
+      if (Array.isArray(cache.trackerRows)) {
+        const restoredTrackerRows = dedupeTrackerRows(
+          cache.trackerRows.map(row => ({
+            ...row,
+            date: row.date ? new Date(row.date) : null
+          }))
+        );
+        renderTrackersFromRows(restoredTrackerRows);
+      }
+
+      const syncedAt = cache.syncedAt ? new Date(cache.syncedAt) : null;
+      if (syncedAt && !Number.isNaN(syncedAt.getTime())) {
+        lastUpdateStamp.textContent = `Dernière synchronisation : ${formatDate(syncedAt)}`;
+      }
+    }
+
+    updateButton.addEventListener("click", () => {
+      if (typeof XLSX === "undefined") {
+        showToast("La bibliothèque de lecture Excel n’est pas chargée. Vérifie la connexion internet.");
+        return;
+      }
+      sheetFileInput.click();
+    });
+
+    sheetFileInput.addEventListener("change", event => {
+      const file = event.target.files?.[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = ev => {
+        try {
+          const data = new Uint8Array(ev.target.result);
+          const workbook = XLSX.read(data, { type: "array", cellDates: true });
+          renderQuests(workbook);
+          renderFinance(workbook);
+          renderTrackersFromRows(parseTrackers(workbook));
+          storeWorkbookSnapshot(workbook);
+          showToast("Mise à jour terminée : quêtes, avancement et finances rafraîchis.");
+        } catch (error) {
+          console.error(error);
+          showToast(error?.message || "Impossible de lire le fichier de suivi.");
+        } finally {
+          sheetFileInput.value = "";
+        }
+      };
+      reader.onerror = () => showToast("La lecture du fichier a échoué.");
+      reader.readAsArrayBuffer(file);
+    });
+
+    try {
+      const cache = JSON.parse(localStorage.getItem("bastien-dashboard-cache") || "null");
+      if (cache) renderCache(cache);
+    } catch (error) {
+      console.warn("Cache local illisible.", error);
+    }
+  </script>
+</body>
+</html>
